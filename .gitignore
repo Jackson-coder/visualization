@@ -1,3 +1,5 @@
-annotations/*
-images/*
-labels/*
+*.jpg
+*.json
+*.txt
+__pycache__
+.vscode
