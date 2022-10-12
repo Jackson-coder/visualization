@@ -55,10 +55,10 @@ def plot_img(filename, json_file):
         for i in range(1,max_person_id+1):
             xyxy[i] = list(map(int, xyxy[i]))
             kpts[i] = list(map(int, kpts[i]))
-            print(xyxy[i], kpts[i])
-            print(action[i])
-            print(color[action[i]])
-            print(im0.shape[:2])
+            # print(xyxy[i], kpts[i])
+            # print(action[i])
+            # print(color[action[i]])
+            # print(im0.shape[:2])
             
             plot_one_box(xyxy[i], im0, color=color[action[i]] ,label=action[i], kpt_label=True, kpts=kpts[i], steps=2, orig_shape=im0.shape[:2])
     cv2.imshow(filename, im0)
