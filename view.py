@@ -55,15 +55,22 @@ def plot_img(filename, json_file):
         for i in range(1,max_person_id+1):
             xyxy[i] = list(map(int, xyxy[i]))
             kpts[i] = list(map(int, kpts[i]))
+            print(xyxy[i], kpts[i])
+            print(action[i])
+            print(color[action[i]])
+            print(im0.shape[:2])
+            
             plot_one_box(xyxy[i], im0, color=color[action[i]] ,label=action[i], kpt_label=True, kpts=kpts[i], steps=2, orig_shape=im0.shape[:2])
     cv2.imshow(filename, im0)
     cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 def json2txt(json_file, txt_file):
 
     f=open(txt_file,"w")
 
     with open(json_file, 'r', encoding='utf8')as fp:
+        print(fp)
         json_data = json.load(fp)
 
         xyxy = {}
@@ -71,10 +78,12 @@ def json2txt(json_file, txt_file):
         kpts = {}
 
         max_person_id = 0
+        # print(max_person_id)
         for i in range(len(json_data['shapes'])):
             person_id = json_data['shapes'][i]['group_id']
-            print(person_id, json_data['shapes'][i]['label'])
+            # print(person_id, json_data['shapes'][i]['label'])
             max_person_id = max(person_id, max_person_id)
+            # print(max_person_id)
             if json_data['shapes'][i]['shape_type'] == 'rectangle':
                 xyxy[person_id] = np.array(json_data['shapes'][i]['points'])
                 xyxy[person_id] = xyxy[person_id].reshape((4,))
@@ -86,6 +95,7 @@ def json2txt(json_file, txt_file):
                     kpts[person_id][int(json_data['shapes'][i]['label'])*2] = json_data['shapes'][i]['points'][0][0]
                     kpts[person_id][int(json_data['shapes'][i]['label'])*2+1] = json_data['shapes'][i]['points'][0][1]
         
+        # print(max_person_id)
         for i in range(1,max_person_id+1):
             xyxy[i] = list(map(int, xyxy[i]))
             kpts[i] = list(map(int, kpts[i]))
@@ -103,6 +113,8 @@ if __name__ == "__main__":
     txt_path = "./labels/"
 
     for json_name in os.listdir(json_path):
+        if json_name.endswith('.md'):
+            continue
         jpg_name = json_name.replace('.json','.jpg')
         txt_name = json_name.replace('.json','.txt')
         filename = img_path + jpg_name
@@ -111,16 +123,3 @@ if __name__ == "__main__":
 
         # json2txt(json_file, txt_file)
         plot_img(filename, json_file)
-
-
-    # filename = 'demo/002.png'
-    # json_file = 'demo/002.json'
-
-    # output_file = "train.txt"
-    # a =8
-    # with open(f,"w") as file:   #”w"代表着每次运行都覆盖内容
-    #     for i in range(a):
-    #         file.write(str(i) + "d" + " "+"\n")
-    #     a +=1
-
-    # plot_img(filename, json_file)
