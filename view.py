@@ -38,9 +38,12 @@ def plot_img(filename, json_file):
         kpts = {}
 
         max_person_id = 0
+        min_person_id = 1
         for i in range(len(json_data['shapes'])):
             person_id = json_data['shapes'][i]['group_id']
             max_person_id = max(person_id, max_person_id)
+            if person_id == 0:
+                min_person_id = 0 
             if json_data['shapes'][i]['shape_type'] == 'rectangle':
                 xyxy[person_id] = np.array(json_data['shapes'][i]['points'])
                 xyxy[person_id] = xyxy[person_id].reshape((4,))
@@ -52,7 +55,7 @@ def plot_img(filename, json_file):
                     kpts[person_id][int(json_data['shapes'][i]['label'])*2] = json_data['shapes'][i]['points'][0][0]
                     kpts[person_id][int(json_data['shapes'][i]['label'])*2+1] = json_data['shapes'][i]['points'][0][1]
         
-        for i in range(1,max_person_id+1):
+        for i in range(min_person_id,max_person_id+1):
             xyxy[i] = list(map(int, xyxy[i]))
             kpts[i] = list(map(int, kpts[i]))
             # print(xyxy[i], kpts[i])
@@ -73,16 +76,22 @@ def json2txt(json_file, txt_file):
         print(fp)
         json_data = json.load(fp)
 
+        height = json_data['imageHeight']
+        width = json_data['imageWidth']
+
         xyxy = {}
         action = {}
         kpts = {}
 
+        min_person_id = 1
         max_person_id = 0
         # print(max_person_id)
         for i in range(len(json_data['shapes'])):
             person_id = json_data['shapes'][i]['group_id']
-            # print(person_id, json_data['shapes'][i]['label'])
+            print(person_id, json_data['shapes'][i]['label'])
             max_person_id = max(person_id, max_person_id)
+            if person_id == 0:
+                min_person_id = 0 
             # print(max_person_id)
             if json_data['shapes'][i]['shape_type'] == 'rectangle':
                 xyxy[person_id] = np.array(json_data['shapes'][i]['points'])
@@ -95,13 +104,18 @@ def json2txt(json_file, txt_file):
                     kpts[person_id][int(json_data['shapes'][i]['label'])*2] = json_data['shapes'][i]['points'][0][0]
                     kpts[person_id][int(json_data['shapes'][i]['label'])*2+1] = json_data['shapes'][i]['points'][0][1]
         
-        # print(max_person_id)
-        for i in range(1,max_person_id+1):
+        print(min_person_id)
+
+        for i in range(min_person_id,max_person_id+1):
             xyxy[i] = list(map(int, xyxy[i]))
+            xywh = [(xyxy[i][0]+xyxy[i][2])/(2*width), \
+                (xyxy[i][1]+xyxy[i][3])/(2*height), \
+                    abs(xyxy[i][2]-xyxy[i][0])/width, \
+                        abs(xyxy[i][1]-xyxy[i][3])/height]
             kpts[i] = list(map(int, kpts[i]))
-            line = [0] + xyxy[i] + kpts[i]
+            line = [0] + xywh + kpts[i]
             
-            f.write(str(line))
+            f.writelines(str(line)[1:-1]+'\n')
             # plot_one_box(xyxy[i], im0, color=color[action[i]] ,label=action[i], kpt_label=True, kpts=kpts[i], steps=2, orig_shape=im0.shape[:2])
     f.close()
     # cv2.imshow(filename, im0)
