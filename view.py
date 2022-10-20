@@ -71,9 +71,10 @@ def plot_img(filename, json_file):
 def json2txt(json_file, txt_file):
 
     f=open(txt_file,"w")
+    action_cls = {"sitting":0,"standing":1,"lying":2,"other":3}
 
     with open(json_file, 'r', encoding='utf8')as fp:
-        print(fp)
+        # print(fp)
         json_data = json.load(fp)
 
         height = json_data['imageHeight']
@@ -88,7 +89,7 @@ def json2txt(json_file, txt_file):
         # print(max_person_id)
         for i in range(len(json_data['shapes'])):
             person_id = json_data['shapes'][i]['group_id']
-            print(person_id, json_data['shapes'][i]['label'])
+            # print(person_id, json_data['shapes'][i]['label'])
             max_person_id = max(person_id, max_person_id)
             if person_id == 0:
                 min_person_id = 0 
@@ -99,21 +100,23 @@ def json2txt(json_file, txt_file):
                 action[person_id] = json_data['shapes'][i]['label']
             else:
                 if person_id not in kpts.keys():
-                    kpts[person_id] = [0] * 17 * 2
+                    kpts[person_id] = [0] * 17 * 3
                 else:
-                    kpts[person_id][int(json_data['shapes'][i]['label'])*2] = json_data['shapes'][i]['points'][0][0]
-                    kpts[person_id][int(json_data['shapes'][i]['label'])*2+1] = json_data['shapes'][i]['points'][0][1]
+                    kpts[person_id][int(json_data['shapes'][i]['label'])*3] = json_data['shapes'][i]['points'][0][0] / width
+                    kpts[person_id][int(json_data['shapes'][i]['label'])*3+1] = json_data['shapes'][i]['points'][0][1] / height
+                    kpts[person_id][int(json_data['shapes'][i]['label'])*3+2] = 1
         
-        print(min_person_id)
+        # print(min_person_id)
 
         for i in range(min_person_id,max_person_id+1):
-            xyxy[i] = list(map(int, xyxy[i]))
+            xyxy[i] = list(map(float, xyxy[i]))
             xywh = [(xyxy[i][0]+xyxy[i][2])/(2*width), \
                 (xyxy[i][1]+xyxy[i][3])/(2*height), \
                     abs(xyxy[i][2]-xyxy[i][0])/width, \
                         abs(xyxy[i][1]-xyxy[i][3])/height]
-            kpts[i] = list(map(int, kpts[i]))
-            line = [0] + xywh + kpts[i]
+            cls_index = action_cls[action[i]]
+            kpts[i] = list(kpts[i]) #list(map(float, kpts[i]))
+            line = [cls_index] + xywh + kpts[i]
             
             f.writelines(str(line)[1:-1]+'\n')
             # plot_one_box(xyxy[i], im0, color=color[action[i]] ,label=action[i], kpt_label=True, kpts=kpts[i], steps=2, orig_shape=im0.shape[:2])
@@ -135,5 +138,5 @@ if __name__ == "__main__":
         json_file = json_path + json_name
         txt_file = txt_path + txt_name
 
-        # json2txt(json_file, txt_file)
-        plot_img(filename, json_file)
+        json2txt(json_file, txt_file)
+        # plot_img(filename, json_file)
